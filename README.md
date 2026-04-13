@@ -1,9 +1,3 @@
-# 🦌 GBIF Mammalia
-
-Exploração e visualização de dados de ocorrência de mamíferos a partir do [GBIF (Global Biodiversity Information Facility)](https://www.gbif.org/).
-
----
-
 ## 🌐 Acesse o projeto
 
 👉 **[https://brennobenk.github.io/GBIFMAMMALIA/](https://brennobenk.github.io/GBIFMAMMALIA/)**
