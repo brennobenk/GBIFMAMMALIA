@@ -423,6 +423,103 @@
   }
   details[open].collapsible summary::before { transform: rotate(90deg); }
   details.collapsible .details-body { padding: 18px 20px; }
+
+  /* ── SPECIES SUGGESTER ───────────────────────────── */
+  .suggester-wrap {
+    position: relative;
+  }
+  #suggester-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1.5px solid var(--brown-warm);
+    border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(44,26,14,0.18);
+    z-index: 100;
+    max-height: 320px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  #suggester-panel.visible { display: block; }
+  .sugg-header {
+    padding: 8px 14px 6px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    color: var(--brown-warm);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: var(--brown-ghost);
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sugg-close {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    line-height: 1;
+  }
+  .sugg-close:hover { background: var(--border); }
+  .sugg-item {
+    padding: 9px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    transition: background .12s;
+  }
+  .sugg-item:last-child { border-bottom: none; }
+  .sugg-item:hover, .sugg-item.sugg-active { background: var(--brown-ghost); }
+  .sugg-vernacular {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.84rem;
+    color: var(--ink);
+    font-weight: 500;
+    flex-shrink: 0;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sugg-scientific {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.73rem;
+    color: var(--muted);
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sugg-badge {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.62rem;
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+  .sugg-empty {
+    padding: 14px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+  }
+  #sugg-count {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+  }
 </style>
 </head>
 <body>
@@ -449,11 +546,20 @@
     </div>
   </div>
 
-  <!-- STEP 2: SEARCH -->
   <div class="card">
     <div class="card-title">2 · Buscar Táxons por Nome Científico, Nome Comum, Gênero ou Família</div>
     <div class="search-row">
-      <textarea id="names" placeholder="Cole aqui os nomes, um por linha...&#10;Ex: Panthera onca&#10;onça-pintada&#10;Dasypus&#10;Phyllostomidae&#10;Chiroptera"></textarea>
+      <div class="suggester-wrap" style="flex:1;display:flex;flex-direction:column;">
+        <textarea id="names" placeholder="Cole aqui os nomes, um por linha...&#10;Ex: Panthera onca&#10;onça-pintada&#10;Dasypus&#10;Phyllostomidae&#10;Chiroptera"></textarea>
+        <div id="suggester-panel" role="listbox" aria-label="Sugestões de espécies">
+          <div class="sugg-header">
+            <span>🔎 Sugestões de espécies</span>
+            <span id="sugg-count"></span>
+            <button class="sugg-close" onclick="closeSuggester()" title="Fechar">✕</button>
+          </div>
+          <div id="sugg-list"></div>
+        </div>
+      </div>
       <div class="btn-col">
         <button id="btn-search" disabled onclick="runSearch()">🔍 Buscar</button>
         <button id="btn-export" disabled onclick="exportExcel()">📥 Exportar Excel</button>
@@ -531,25 +637,25 @@
   </div>
 
   <!-- TABLE 2: DwC -->
-  <div class="section-label">Tabela 2 · Formato Darwin Core Simplificado</div>
+  <div class="section-label">Tabela 2 · Formato Darwin Core</div>
   <div class="card" style="padding:0; overflow:hidden;">
     <div class="table-wrap">
       <table id="result-table2">
         <thead>
           <tr>
             <th>#</th>
-            <th>Kingdom</th>
-            <th>Class</th>
-            <th>Order</th>
-            <th>Family</th>
-            <th>Genus</th>
-            <th>SpecificEpithet</th>
-            <th>ScientificName</th>
-            <th>ScientificNameAuthorship</th>
-            <th>VernacularName</th>
-            <th>TaxonRank</th>
-            <th>IdentificationQualifier</th>
-            <th>TaxonRemarks</th>
+            <th>kingdom</th>
+            <th>phylum</th>
+            <th>class</th>
+            <th>order</th>
+            <th>family</th>
+            <th>genus</th>
+            <th>specificEpithet</th>
+            <th>infraspecificEpithet</th>
+            <th>identificationQualifier</th>
+            <th>scientificName</th>
+            <th>vernacularName</th>
+            <th>taxonRank</th>
           </tr>
         </thead>
         <tbody id="result-body2"></tbody>
@@ -876,23 +982,26 @@ function renderTable2(rows) {
   if (!rows.length) { tbody.innerHTML = ''; return; }
 
   const html = rows.map((r, i) => {
-    let qualifier = '';
-    if (r.statusBusca === 'Nao encontrado') qualifier = '?';
+    const qualifier = r.statusBusca === 'Nao encontrado' ? '?' : '';
     const firstNome = r.nomeComum ? r.nomeComum.split(/[,;|]/)[0].trim() : '';
-    const remarks = [r.iucn ? 'IUCN:'+r.iucn : '', r.mma ? 'MMA:'+r.mma : ''].filter(Boolean).join(' | ');
+    // Determine infraspecificEpithet and taxonRank
+    // For now all are species-level (Mammalia list = species)
+    const infraEpithet = '';
+    const rank = 'espécie';
     return `<tr>
       <td>${i+1}</td>
       <td>Animalia</td>
+      <td>Chordata</td>
+      <td>Mammalia</td>
       ${cell(r.ordem)}
       ${cell(r.familia)}
       <td style="font-style:italic">${esc(r.genero)||'—'}</td>
       <td style="font-style:italic">${esc(r.especie)||'—'}</td>
+      <td>${infraEpithet}</td>
+      <td>${esc(qualifier)}</td>
       <td style="font-style:italic;font-weight:500">${esc(r.binomio)||'—'}</td>
-      <td title="${esc(r.binomioAutor)}">${esc(r.binomioAutor.substring(0,50))||'—'}${r.binomioAutor.length>50?'…':''}</td>
-      ${cell(firstNome)}
-      <td>species</td>
-      ${cell(qualifier)}
-      ${cell(remarks)}
+      <td title="${esc(r.nomeComum)}">${esc(firstNome)||'—'}</td>
+      <td>${rank}</td>
     </tr>`;
   });
   tbody.innerHTML = html.join('');
@@ -1020,15 +1129,15 @@ function copyTable(tableNum) {
     tsv = [headers,...dataRows].map(row => row.map(c=>String(c??'').replace(/\t/g,' ')).join('\t')).join('\r\n');
   } else {
     const headers = [
-      '#','Kingdom','Order','Family','Genus','SpecificEpithet','ScientificName',
-      'ScientificNameAuthorship','VernacularName','TaxonRank','IdentificationQualifier','TaxonRemarks'
+      '#','kingdom','phylum','class','order','family','genus',
+      'specificEpithet','infraspecificEpithet','identificationQualifier',
+      'scientificName','vernacularName','taxonRank'
     ];
     const dataRows = display.map((r,i) => {
       const q = r.statusBusca==='Nao encontrado' ? '?' : '';
       const firstNome = r.nomeComum ? r.nomeComum.split(/[,;|]/)[0].trim() : '';
-      const rem = [r.iucn?'IUCN:'+r.iucn:'',r.mma?'MMA:'+r.mma:''].filter(Boolean).join(' | ');
-      return [i+1,'Animalia',r.ordem,r.familia,r.genero,r.especie,r.binomio,
-              r.binomioAutor,firstNome,'species',q,rem];
+      return [i+1,'Animalia','Chordata','Mammalia',r.ordem,r.familia,r.genero,
+              r.especie,'',q,r.binomio,firstNome,'espécie'];
     });
     tsv = [headers,...dataRows].map(row => row.map(c=>String(c??'').replace(/\t/g,' ')).join('\t')).join('\r\n');
   }
@@ -1097,25 +1206,172 @@ function clearResults() {
   lastResults = [];
 }
 
+// ── SPECIES SUGGESTER ─────────────────────────────────────────────────────────
+let suggActive = -1;
+let suggItems  = [];
+const MAX_SUGG = 50;
+
+function buildSuggestions(query) {
+  if (!dataLoaded || !query || query.length < 2) return [];
+  const norm = normalize(query);
+  const seen = new Set();
+  const results = [];
+
+  const addRows = (arr, matchType) => {
+    for (const row of arr) {
+      const key = row['BINOMIO'] || '';
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const nomes = String(row['NOME COMUM'] || '');
+      const firstNome = nomes.split(/[,;|]/)[0].trim();
+      results.push({ binomio: key, vernacular: firstNome, iucn: row['IUCN 2025'] || '', matchType });
+      if (results.length >= MAX_SUGG) return true; // stop
+    }
+    return false;
+  };
+
+  // 1) Exact vernacular key match
+  if (vernacularIndex.has(norm)) {
+    if (addRows(vernacularIndex.get(norm), 'vernacular')) return results;
+  }
+  // 2) Exact scientific
+  if (scientificIndex.has(norm)) {
+    if (addRows(scientificIndex.get(norm), 'scientific')) return results;
+  }
+  // 3) Partial vernacular
+  for (const [key, arr] of vernacularIndex) {
+    if (key !== norm && key.includes(norm)) {
+      if (addRows(arr, 'vernacular')) return results;
+    }
+  }
+  // 4) Partial scientific (starts with)
+  for (const [key, arr] of scientificIndex) {
+    if (key !== norm && key.startsWith(norm)) {
+      if (addRows(arr, 'scientific')) return results;
+    }
+  }
+  // 5) Partial scientific (contains)
+  if (results.length < MAX_SUGG) {
+    for (const [key, arr] of scientificIndex) {
+      if (key !== norm && !key.startsWith(norm) && key.includes(norm)) {
+        if (addRows(arr, 'scientific')) return results;
+        if (results.length >= MAX_SUGG) break;
+      }
+    }
+  }
+
+  return results;
+}
+
+function getLastLine(val) {
+  const lines = val.split('\n');
+  return lines[lines.length - 1].trim();
+}
+
+function showSuggester(items) {
+  const panel = document.getElementById('suggester-panel');
+  const list  = document.getElementById('sugg-list');
+  const count = document.getElementById('sugg-count');
+  suggItems = items;
+  suggActive = -1;
+
+  if (!items.length) {
+    panel.classList.remove('visible');
+    return;
+  }
+
+  count.textContent = items.length >= MAX_SUGG ? `${MAX_SUGG}+ resultados` : `${items.length} resultado${items.length!==1?'s':''}`;
+
+  list.innerHTML = items.map((it, idx) => {
+    const iucnCls = it.iucn ? `iucn-badge iucn-${it.iucn.trim().toUpperCase()}` : '';
+    const badge = it.iucn ? `<span class="sugg-badge ${iucnCls}">${esc(it.iucn)}</span>` : '';
+    return `<div class="sugg-item" role="option" data-idx="${idx}" data-binomio="${esc(it.binomio)}" data-vernacular="${esc(it.vernacular)}" onmousedown="selectSuggestion(${idx},event)">
+      <span class="sugg-vernacular">${esc(it.vernacular || it.binomio)}</span>
+      <span class="sugg-scientific">${esc(it.binomio)}</span>
+      ${badge}
+    </div>`;
+  }).join('');
+
+  panel.classList.add('visible');
+}
+
+function closeSuggester() {
+  document.getElementById('suggester-panel').classList.remove('visible');
+  suggItems = [];
+  suggActive = -1;
+}
+
+function selectSuggestion(idx, e) {
+  if (e) e.preventDefault();
+  const item = suggItems[idx];
+  if (!item) return;
+
+  const ta = document.getElementById('names');
+  const lines = ta.value.split('\n');
+  // Replace last line (the one being typed) with the vernacular name (for search)
+  const chosen = item.vernacular || item.binomio;
+  lines[lines.length - 1] = chosen;
+  ta.value = lines.join('\n');
+  closeSuggester();
+  ta.focus();
+  setTimeout(runLiveSearch, 0);
+}
+
+function moveSuggester(dir) {
+  const items = document.querySelectorAll('#sugg-list .sugg-item');
+  if (!items.length) return false;
+  if (suggActive >= 0) items[suggActive].classList.remove('sugg-active');
+  suggActive = Math.max(0, Math.min(items.length - 1, suggActive + dir));
+  items[suggActive].classList.add('sugg-active');
+  items[suggActive].scrollIntoView({ block: 'nearest' });
+  return true;
+}
+
 // ── LIVE SEARCH EVENTS ────────────────────────────────────────────────────────
 const namesTA = document.getElementById('names');
 
 namesTA.addEventListener('keydown', e => {
+  const panel = document.getElementById('suggester-panel');
+  if (panel.classList.contains('visible')) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); moveSuggester(1); return; }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); moveSuggester(-1); return; }
+    if (e.key === 'Enter' && suggActive >= 0) { selectSuggestion(suggActive, e); return; }
+    if (e.key === 'Escape') { closeSuggester(); return; }
+  }
   if (e.ctrlKey && e.key === 'Enter') runSearch();
-});
-namesTA.addEventListener('keydown', e => {
   if (e.key === 'Enter') setTimeout(runLiveSearch, 0);
 });
+
 namesTA.addEventListener('paste', () => {
   setTimeout(() => {
     namesTA.selectionStart = namesTA.selectionEnd = namesTA.value.length;
+    closeSuggester();
     runLiveSearch();
   }, 0);
 });
+
 let _liveTimer = null;
 namesTA.addEventListener('input', () => {
   clearTimeout(_liveTimer);
-  _liveTimer = setTimeout(runLiveSearch, 150);
+  _liveTimer = setTimeout(() => {
+    const lastLine = getLastLine(namesTA.value);
+    if (lastLine.length >= 2) {
+      const suggs = buildSuggestions(lastLine);
+      showSuggester(suggs);
+    } else {
+      closeSuggester();
+    }
+    runLiveSearch();
+  }, 100);
+});
+
+namesTA.addEventListener('blur', () => {
+  setTimeout(closeSuggester, 200);
+});
+
+document.addEventListener('click', e => {
+  const panel = document.getElementById('suggester-panel');
+  if (!panel.contains(e.target) && e.target !== namesTA) closeSuggester();
 });
 </script>
 </body>
